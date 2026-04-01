@@ -636,13 +636,31 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # ── Database config ───────────────────────────────────────────────
-DB_CONFIG = {
-    "host":     "localhost",
-    "port":     5432,
-    "database": "proctor_db",
-    "user":     "postgres",
-    "password": "shrinetsingh@9648",
-}
+# DB_CONFIG = {
+#     "host":     "localhost",
+#     "port":     5432,
+#     "database": "proctor_db",
+#     "user":     "postgres",
+#     "password": "shrinetsingh@9648",
+# }
+
+
+import os
+
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://postgres:shrinetsingh@9648@localhost:5432/proctor_db"
+)
+
+@app.on_event("startup")
+async def startup():
+    global db_pool
+    try:
+        db_pool = await asyncpg.create_pool(DATABASE_URL)
+        print("Database connected successfully")
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        db_pool = None
 
 # ── Pydantic models ───────────────────────────────────────────────
 class Token(BaseModel):
