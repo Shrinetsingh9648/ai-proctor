@@ -1,0 +1,20 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pt
+
+# Node
+node_modules/
+build/
+
+# IDE
+.idea/
+.vscode/
+
+# Models
+yolov8n.pt
+
+# Environment
+.env
