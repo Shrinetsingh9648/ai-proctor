@@ -796,38 +796,89 @@ async def proctor_websocket(websocket: WebSocket):
     print(f"Client connected: {username}")
     scorer = SuspicionScorer()
 
+    # try:
+    #     while True:
+    #         raw = await websocket.receive_text()
+    #         if "," in raw:
+    #             raw = raw.split(",")[1]
+    #
+    #         img_bytes = base64.b64decode(raw)
+    #         np_arr    = np.frombuffer(img_bytes, dtype=np.uint8)
+    #         frame     = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    #
+    #         if frame is None:
+    #             await websocket.send_text(json.dumps({"error": "Bad frame"}))
+    #             continue
+    #
+    #         face_count,            frame = count_faces(frame)
+    #         direction, yaw, pitch, frame = get_head_pose(frame)
+    #         phone_detected,        frame = detect_phone(frame)
+    #         score_data = scorer.update(face_count, direction, phone_detected)
+    #
+    #         for event in score_data["events"]:
+    #             await save_log(username, event, score_data["suspicion_score"])
+    #
+    #         await websocket.send_text(json.dumps({
+    #             "face_count":        face_count,
+    #             "looking_direction": direction,
+    #             "yaw_deg":           yaw,
+    #             "pitch_deg":         pitch,
+    #             "phone_detected":    phone_detected,
+    #             "look_away_secs":    score_data["look_away_secs"],
+    #             "suspicion_score":   score_data["suspicion_score"],
+    #             "events":            score_data["events"],
+    #         }))
+
     try:
         while True:
             raw = await websocket.receive_text()
+
+            # ── Handle tab switch event ──────────────────────────
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, dict) and parsed.get("type") == "tab_switch":
+                    await save_log(username, "tab_switch", 40)
+                    await websocket.send_text(json.dumps({"tab_switch_logged": True}))
+                    continue
+            except Exception:
+                pass
+
+            # ── Handle normal webcam frame ───────────────────────
             if "," in raw:
                 raw = raw.split(",")[1]
 
             img_bytes = base64.b64decode(raw)
-            np_arr    = np.frombuffer(img_bytes, dtype=np.uint8)
-            frame     = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            np_arr = np.frombuffer(img_bytes, dtype=np.uint8)
+            frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
             if frame is None:
                 await websocket.send_text(json.dumps({"error": "Bad frame"}))
                 continue
 
-            face_count,            frame = count_faces(frame)
+            face_count, frame = count_faces(frame)
             direction, yaw, pitch, frame = get_head_pose(frame)
-            phone_detected,        frame = detect_phone(frame)
+            phone_detected, frame = detect_phone(frame)
             score_data = scorer.update(face_count, direction, phone_detected)
 
             for event in score_data["events"]:
                 await save_log(username, event, score_data["suspicion_score"])
 
             await websocket.send_text(json.dumps({
-                "face_count":        face_count,
+                "face_count": face_count,
                 "looking_direction": direction,
-                "yaw_deg":           yaw,
-                "pitch_deg":         pitch,
-                "phone_detected":    phone_detected,
-                "look_away_secs":    score_data["look_away_secs"],
-                "suspicion_score":   score_data["suspicion_score"],
-                "events":            score_data["events"],
+                "yaw_deg": yaw,
+                "pitch_deg": pitch,
+                "phone_detected": phone_detected,
+                "look_away_secs": score_data["look_away_secs"],
+                "suspicion_score": score_data["suspicion_score"],
+                "events": score_data["events"],
             }))
+
+    except WebSocketDisconnect:
+        print(f"Client disconnected: {username}")
+    except Exception as e:
+        print(f"Error: {e}")
+        await websocket.close()
 
     except WebSocketDisconnect:
         print(f"Client disconnected: {username}")

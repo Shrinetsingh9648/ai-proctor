@@ -163,54 +163,63 @@ export default function App() {
 }
 
 function AppInner({ user, view, setView, videoRef, onLogout }) {
-  const { result, connected, error } = useProctor(videoRef, user.token);
+  const { result, connected, error, tabSwitchCount, tabWarning } = useProctor(videoRef, user.token);
   const isSuspicious = result.suspicion_score > 0;
 
   return (
     <div className="app">
+      {/* Tab switch warning banner */}
+      {tabWarning && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          background: '#dc2626', color: '#fff',
+          padding: '14px', textAlign: 'center',
+          fontSize: '15px', fontWeight: '600',
+          animation: 'pulse 0.5s infinite',
+        }}>
+          ⚠️ WARNING: Tab switching detected! This has been logged. ({tabSwitchCount} time{tabSwitchCount !== 1 ? 's' : ''})
+        </div>
+      )}
+
       {/* Top bar */}
-      <div className="topbar">
+      <div className="topbar" style={{ marginTop: tabWarning ? '50px' : '0' }}>
         <div>
           <div className="topbar-title">AI Proctor System</div>
           <div className="topbar-sub">
             Logged in as <strong style={{ color: '#60a5fa' }}>{user.username}</strong>
             {' '}({user.role})
+            {tabSwitchCount > 0 && (
+              <span style={{ color: '#f87171', marginLeft: '12px' }}>
+                ⚠️ Tab switches: {tabSwitchCount}
+              </span>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {user.role === 'student' && (
-            <button
-              onClick={() => setView('exam')}
-              style={{
-                padding: '6px 14px', borderRadius: '8px', border: 'none',
-                cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-                background: view === 'exam' ? '#2563eb' : '#1e293b',
-                color: view === 'exam' ? '#fff' : '#94a3b8',
-              }}
-            >Exam View</button>
+            <button onClick={() => setView('exam')} style={{
+              padding: '6px 14px', borderRadius: '8px', border: 'none',
+              cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+              background: view === 'exam' ? '#2563eb' : '#1e293b',
+              color: view === 'exam' ? '#fff' : '#94a3b8',
+            }}>Exam View</button>
           )}
           {user.role === 'admin' && (
-            <button
-              onClick={() => setView('admin')}
-              style={{
-                padding: '6px 14px', borderRadius: '8px', border: 'none',
-                cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-                background: view === 'admin' ? '#2563eb' : '#1e293b',
-                color: view === 'admin' ? '#fff' : '#94a3b8',
-              }}
-            >Admin Dashboard</button>
+            <button onClick={() => setView('admin')} style={{
+              padding: '6px 14px', borderRadius: '8px', border: 'none',
+              cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+              background: view === 'admin' ? '#2563eb' : '#1e293b',
+              color: view === 'admin' ? '#fff' : '#94a3b8',
+            }}>Admin Dashboard</button>
           )}
           <div className={connected ? 'badge-green' : 'badge-red'}>
             {connected ? 'Proctoring active' : 'Connecting...'}
           </div>
-          <button
-            onClick={onLogout}
-            style={{
-              padding: '6px 14px', borderRadius: '8px', border: 'none',
-              cursor: 'pointer', fontSize: '13px',
-              background: '#1e293b', color: '#f87171',
-            }}
-          >Logout</button>
+          <button onClick={onLogout} style={{
+            padding: '6px 14px', borderRadius: '8px', border: 'none',
+            cursor: 'pointer', fontSize: '13px',
+            background: '#1e293b', color: '#f87171',
+          }}>Logout</button>
         </div>
       </div>
 
@@ -229,4 +238,4 @@ function AppInner({ user, view, setView, videoRef, onLogout }) {
       )}
     </div>
   );
-}
+ }
