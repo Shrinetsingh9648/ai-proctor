@@ -20,7 +20,7 @@ export default function LoginPage({ onLogin }) {
       formData.append('username', username);
       formData.append('password', password);
 
-      const res  = await fetch('http://localhost:8000/login', {
+      const res  = await fetch(`https://${process.env.REACT_APP_BACKEND_URL || 'localhost:8000'}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData,

@@ -23,7 +23,7 @@ export default function AdminDashboard({ token }) {
 
 function fetchLogs() {
     setLoading(true);
-    fetch('http://localhost:8000/logs', {
+    fetch(`https://${process.env.REACT_APP_BACKEND_URL || 'localhost:8000'}/logs` , {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(r => r.json())

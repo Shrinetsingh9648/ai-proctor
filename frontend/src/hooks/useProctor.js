@@ -211,7 +211,10 @@ export function useProctor(videoRef, token) {
   }, [videoRef]);
 
   useEffect(() => {
-    const wsUrl = `ws://localhost:8000/ws/proctor?token=${token || ''}`;
+//    const wsUrl = `ws://localhost:8000/ws/proctor?token=${token || ''}`;
+const BACKEND = process.env.REACT_APP_BACKEND_URL || 'localhost:8000';
+const wsUrl = `wss://${BACKEND}/ws/proctor?token=${token || ''}`;
+
     const ws    = new WebSocket(wsUrl);
     wsRef.current = ws;
 
